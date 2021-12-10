@@ -328,7 +328,7 @@ function handleTextMessage(sender_psid, message) {
 
           callSendAPI(
             sender_psid,
-            `We will take your first name as ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+            `We will take your first name as ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
           );
         } else {
           callSendAPI(sender_psid, `First, please write below your first name`);
@@ -345,7 +345,7 @@ function handleTextMessage(sender_psid, message) {
         console.log(BIRTH_DATE);
 
         let resp = {
-          text: `You agreed that your birth date is ${USER_BIRTH_DATE}. Would you like to know how many days are until your next birtday?`,
+          text: `You agreed that your birth date is ${BIRTH_DATE}. Would you like to know how many days are until your next birtday?`,
           quick_replies: [
             {
               content_type: "text",
@@ -364,7 +364,7 @@ function handleTextMessage(sender_psid, message) {
       } else {
         callSendAPI(
           sender_psid,
-          `You agreed that your first name is ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+          `You agreed that your first name is ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
         );
       }
     } else if (FIRST_NAME !== "" && BIRTH_DATE !== "") {
@@ -462,57 +462,57 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// function to count birth days
-function countBirthDays(birthDate = USER_BIRTH_DATE) {
-  var today = new Date();
-
-  // we extract user birth date information in decimal
-  var user_year = parseInt(birthDate.substring(0, 4), 10);
-  var user_month = parseInt(birthDate.substring(5, 7), 10);
-  var user_day = parseInt(birthDate.substring(8, 10), 10);
-
-  // bad information introduced
-  if (user_year >= today.getFullYear() || user_month > 12 || user_day > 31) {
-    return -1;
-  } else {
-    // valid information -> proceed to calculus
-    const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
-    let days_left = Math.round(
-      Math.abs(
-        (today - new Date(today.getFullYear(), user_month - 1, user_day)) /
-          oneDay
-      )
-    );
-
-    return days_left;
-  }
-}
-
-// // func to count birth day
+// // function to count birth days
 // function countBirthDays(birthDate = BIRTH_DATE) {
-//   let today = moment().format("YYYY-MM-DD");
+//   var today = new Date();
 
-//   // calculate current age of person in years
-//   const years = moment().diff(birthDate, "years");
+//   // we extract user birth date information in decimal
+//   var user_year = parseInt(birthDate.substring(0, 4), 10);
+//   var user_month = parseInt(birthDate.substring(5, 7), 10);
+//   var user_day = parseInt(birthDate.substring(8, 10), 10);
 
-//   // Special case if birthday is today; we do NOT need an extra year added
-//   const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
-
-//   // Add age plus one year (unless birthday is today) to get next birthday
-//   const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
-
-//   // Final calculation in days
-//   const daysUntilBirthday = nextBirthday.diff(today, "days");
-
-//   // bad information
-//   if (years > moment().get("year")) {
+//   // bad information introduced
+//   if (user_year >= today.getFullYear() || user_month > 12 || user_day > 31) {
 //     return -1;
-//   }
-//   // valid information
-//   else {
-//     return daysUntilBirthday;
+//   } else {
+//     // valid information -> proceed to calculus
+//     const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+//     let days_left = Math.round(
+//       Math.abs(
+//         (today - new Date(today.getFullYear(), user_month - 1, user_day)) /
+//           oneDay
+//       )
+//     );
+
+//     return days_left;
 //   }
 // }
+
+// func to count birth day
+function countBirthDays(birthDate = BIRTH_DATE) {
+  let today = moment().format("YYYY-MM-DD");
+
+  // calculate current age of person in years
+  const years = moment().diff(birthDate, "years");
+
+  // Special case if birthday is today; we do NOT need an extra year added
+  const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
+
+  // Add age plus one year (unless birthday is today) to get next birthday
+  const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
+
+  // Final calculation in days
+  const daysUntilBirthday = nextBirthday.diff(today, "days");
+
+  // bad information
+  if (years > moment().get("year")) {
+    return -1;
+  }
+  // valid information
+  else {
+    return daysUntilBirthday;
+  }
+}
 
 // function to handle quick replies
 function handleQuickReply(sender_psid, message) {
@@ -538,11 +538,11 @@ function handleQuickReply(sender_psid, message) {
       if (LATEST_MESSAGE[i] === " ") break;
     }
     FIRST_NAME = capitalizeFirstLetter(FIRST_NAME);
-    console.log(USER_FIRST_NAME);
+    console.log(FIRST_NAME);
 
     callSendAPI(
       sender_psid,
-      `You agreed that your first name is ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+      `You agreed that your first name is ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
     );
   }
   // user agreed on his birth date
