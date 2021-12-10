@@ -156,7 +156,7 @@ function handleTextMessage(sender_psid, message) {
   LATEST_MESSAGE = msg;
 
   // kind of accepted reaction from user
-  let greeting = ["hi", "hai", "hello", "hey"];
+  let greeting = ["hi", "hai", "hello"];
   let accepted_msg = ["yeah", "yup", "sure", "yep", "yes", "y"];
   let deny_msg = ["nah", "no", "nope", "maybe later"];
   let thanks_msg = [
