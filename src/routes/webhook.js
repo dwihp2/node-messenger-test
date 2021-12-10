@@ -465,6 +465,30 @@ function handleTextMessage(sender_psid, message) {
       );
     }
   }
+
+  function countWords(string) {
+    var matches = str.match(/[\w\d\’\'-]+/gi);
+    return matches ? matches.length : 0;
+  }
+
+  // function to extract first name of user
+  function extractName(firstName = PREV_OF_LATEST) {
+    let name = "";
+    for (let i = 3; i < FIRST_NAME; i++) {
+      name += firstName[i];
+    }
+    return name;
+  }
+
+  // function to extract date from user
+  function extractDate(date = PREF_OF_LATEST) {
+    let dt = "";
+    for (let i = 3; i < date.length; i++) {
+      if (date[i] === " ") break;
+      dt += date[i];
+    }
+    return dt;
+  }
 }
 
 module.exports = router;
