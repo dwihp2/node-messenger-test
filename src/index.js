@@ -8,7 +8,7 @@ require("./db/mongoose");
 const webhookRouter = require("./routes/webhook");
 
 let app = express();
-app.disable("x-powered-by");
+// app.disable("x-powered-by") ;
 let port = process.env.PORT || 8080;
 
 // parse application/x-www.form-urlencoded

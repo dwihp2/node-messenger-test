@@ -2,20 +2,18 @@ require("dotenv").config();
 const request = require("request");
 const express = require("express");
 const router = new express.Router();
-const moment = require('moment')
-const Message = requre("../models/message.js");
+const moment = require("moment");
+const Message = require("../models/message.js");
 
 // global variable for storing message information
 let COUNT_MESSAGES = 0;
 let WEBHOOK_MSG = "";
 let SENDER_ID = "";
 let LATEST_MESSAGE = "";
-let PREV_WORD = ""
-let PREV_OF_LATEST = ""
-let FIRST_NAME = ""
-let BIRTH_DATE = ""
-
-
+let PREV_WORD = "";
+let PREV_OF_LATEST = "";
+let FIRST_NAME = "";
+let BIRTH_DATE = "";
 
 // Create endpoint webhook
 router.post("/webhook", (req, res) => {
@@ -205,26 +203,30 @@ function handleTextMessage(sender_psid, message) {
         for (const i = 0; i < accepted_msg.length; i++) {
           if (msg.includes(accepted_msg[i])) break;
         }
-        
+
         if (i !== accepted_msg.length) {
           FIRST_NAME = capitalizeFirstLetter(extractName());
           console.log(FIRST_NAME);
 
-          callSendAPI(sender_psid, `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`)
+          callSendAPI(
+            sender_psid,
+            `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
+          );
+        } else {
+          callSendAPI(sender_psid, `First, please write below your first name`);
         }
-        else{
-          callSendAPI(sender_psid, `First, please write below your first name`)
-        }
-      }
-      else{
-        callSendAPI(sender_psid, `First, please write below your first name`)
+      } else {
+        callSendAPI(sender_psid, `First, please write below your first name`);
       }
     }
     // BIRTH_DATE empty
-    else if (BIRTH_DATE ==="") {
-      if(countWords(LATEST_MESSAGE) === 1 && (extractDate().split("-").length-1) === 2 ) {
-        BIRTH_DATE = PREV_OF_LATEST
-        console.log(BIRTH_DATE)
+    else if (BIRTH_DATE === "") {
+      if (
+        countWords(LATEST_MESSAGE) === 1 &&
+        extractDate().split("-").length - 1 === 2
+      ) {
+        BIRTH_DATE = PREV_OF_LATEST;
+        console.log(BIRTH_DATE);
 
         let response = {
           text: `We record your birth date is ${BIRTH_DATE}. Would you like to know how many days until your birthday?`,
@@ -232,50 +234,64 @@ function handleTextMessage(sender_psid, message) {
             {
               content_type: "text",
               title: "I do",
-              payload: 'i do',
+              payload: "i do",
             },
             {
               content_type: "text",
               title: "Not today",
-              payload: 'not today',
-            }
-          ]
+              payload: "not today",
+            },
+          ],
         };
 
-        callSendAPI(sender_psid, ``, response)
-      }
-      else{
-        callSendAPI(sender_psid, `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`)
+        callSendAPI(sender_psid, ``, response);
+      } else {
+        callSendAPI(
+          sender_psid,
+          `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
+        );
       }
     }
     // if first name and birth date is not empty
-    else if(FIRST_NAME !== "" && BIRTH_DATE !== "")
-      let remaining_days = countBirthDays();
+    else if (FIRST_NAME !== "" && BIRTH_DATE !== "")
+      var remaining_days = countBirthDays();
 
-      if(remaining_days === -1) {
-        callSendAPI(sender_psid, `False birth date. If you wish to start again write #getStarted. See You`)
-      } else {
-        // show remaining days until birthday
-        callSendAPI(sender_psid, `There are ${remaining_days} days until your birthday!`)
-      }
+    if (remaining_days === -1) {
+      callSendAPI(
+        sender_psid,
+        `False birth date. If you wish to start again write #getStarted. See You`
+      );
+    } else {
+      // show remaining days until birthday
+      callSendAPI(
+        sender_psid,
+        `There are ${remaining_days} days until your birthday!`
+      );
+    }
   }
 
   // deny case
-  else if(deny_msg.includes(msg)) {
-    callSendAPI(sender_psid, `Thank you for your answer. If you wish to start again write #getStarted. See You`)
+  else if (deny_msg.includes(msg)) {
+    callSendAPI(
+      sender_psid,
+      `Thank you for your answer. If you wish to start again write #getStarted. See You`
+    );
   }
 
   // gratitude case
-  else if(thanks_msg.includes(msg)) {
-    callSendAPI(sender_psid, `You're welcome!. If you wish to start again write #getStarted. See You`)
+  else if (thanks_msg.includes(msg)) {
+    callSendAPI(
+      sender_psid,
+      `You're welcome!. If you wish to start again write #getStarted. See You`
+    );
   }
 
-  // 
+  //
   else {
     let response;
 
     // if bot dont know the first name
-    if(!FIRST_NAME) {
+    if (!FIRST_NAME) {
       LATEST_MESSAGE = capitalizeFirstLetter(LATEST_MESSAGE);
       response = {
         text: `Is it ${LATEST_MESSAGE} your first name?`,
@@ -289,15 +305,15 @@ function handleTextMessage(sender_psid, message) {
             content_type: "text",
             title: "No",
             payload: "no",
-          }
-        ]
-      }
+          },
+        ],
+      };
 
-      callSendAPI(sender_psid, ``, response)
+      callSendAPI(sender_psid, ``, response);
     }
 
     // if bot dont know the birth date
-    else if(!BIRTH_DATE) {
+    else if (!BIRTH_DATE) {
       response = {
         text: `Is it ${LATEST_MESSAGE} your birth date?`,
         quick_replies: [
@@ -310,15 +326,18 @@ function handleTextMessage(sender_psid, message) {
             content_type: "text",
             title: "Nope",
             payload: "nope",
-          }
-        ]
-      }
+          },
+        ],
+      };
 
-      callSendAPI(sender_psid, ``, response)
+      callSendAPI(sender_psid, ``, response);
     }
     // something else
-    else{
-      callSendAPI(sender_psid, `Thank you for your answer. If you wish to start again write #getStarted. See You`)
+    else {
+      callSendAPI(
+        sender_psid,
+        `Thank you for your answer. If you wish to start again write #getStarted. See You`
+      );
     }
   }
 
@@ -328,65 +347,69 @@ function handleTextMessage(sender_psid, message) {
   }
 
   // func to count birth day
-  function countBirthDays(birthDate=BIRTH_DATE) {
-    let today = moment().format('YYYY-MM-DD')
+  function countBirthDays(birthDate = BIRTH_DATE) {
+    let today = moment().format("YYYY-MM-DD");
 
     // calculate current age of person in years
-    const years = moment().diff(birthDate, 'years')
+    const years = moment().diff(birthDate, "years");
 
     // Special case if birthday is today; we do NOT need an extra year added
     const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
 
     // Add age plus one year (unless birthday is today) to get next birthday
-    const nextBirthday = moment(birthdate).add(years + adjustToday, 'years');
+    const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
 
     // Final calculation in days
-    const daysUntilBirthday = nextBirthday.diff(today, 'days');
-
+    const daysUntilBirthday = nextBirthday.diff(today, "days");
 
     // bad information
-    if(years > (moment().get("year"))) {
-      return -1
+    if (years > moment().get("year")) {
+      return -1;
     }
     // valid information
     else {
-      return daysUntilBirthday
+      return daysUntilBirthday;
     }
   }
 
   function handleQuickReply(sender_psid, message) {
-    let msg = message.text
-    msg = msg.toLowerCase()
+    let msg = message.text;
+    msg = msg.toLowerCase();
 
     if (msg === "sure") {
       if (!FIRST_NAME) {
-        callSendAPI(sender_psid, `First, please write below your first name`)
-      }
-      else {
-        callSendAPI(sender_psid, `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`)
+        callSendAPI(sender_psid, `First, please write below your first name`);
+      } else {
+        callSendAPI(
+          sender_psid,
+          `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
+        );
       }
     }
     // user agreed on his first name
-    else if (msg==="yes") {
-      for (const i = 3; i< LATEST_MESSAGE.length; i++) {
-        FIRST_NAME += LATEST_MESSAGE[i]
+    else if (msg === "yes") {
+      for (const i = 3; i < LATEST_MESSAGE.length; i++) {
+        FIRST_NAME += LATEST_MESSAGE[i];
 
-        if(LATEST_MESSAGE[i] === " ") break;
+        if (LATEST_MESSAGE[i] === " ") break;
       }
 
       FIRST_NAME = capitalizeFirstLetter(FIRST_NAME);
-      console.log(FIRST_NAME)
+      console.log(FIRST_NAME);
 
-      callSendAPI(sender_psid, `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`)
+      callSendAPI(
+        sender_psid,
+        `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
+      );
     }
     // user aggreed on his birth date
-    else if (msg==="yeah") {
-      for(const i = 3; i< LATEST_MESSAGE.length; i++) {
-        BIRTH_DATE += LATEST_MESSAGE[i]
+    else if (msg === "yeah") {
+      for (const i = 3; i < LATEST_MESSAGE.length; i++) {
+        BIRTH_DATE += LATEST_MESSAGE[i];
 
-        if(LATEST_MESSAGE[i] === " ") break
+        if (LATEST_MESSAGE[i] === " ") break;
       }
-      console.log(BIRTH_DATE)
+      console.log(BIRTH_DATE);
 
       let response = {
         text: `We record your birth date is ${BIRTH_DATE}. Would you like to know how many days until your birthday?`,
@@ -394,36 +417,48 @@ function handleTextMessage(sender_psid, message) {
           {
             content_type: "text",
             title: "I do",
-            payload: 'i do',
+            payload: "i do",
           },
           {
             content_type: "text",
             title: "Not today",
-            payload: 'not today',
-          }
-        ]
-      }
+            payload: "not today",
+          },
+        ],
+      };
 
-      callSendAPI(sender_psid, ``, response)
+      callSendAPI(sender_psid, ``, response);
     }
     // user agreed to know bith date days
-    else if(msg === "i do") {
-      let remaining_days = countBirthDays()
+    else if (msg === "i do") {
+      var remaining_days = countBirthDays();
 
       // bad information
       if (remaining_days === -1) {
-        callSendAPI(sender_psid, `False birth date. If you wish to start again write #getStarted. See You`)
+        callSendAPI(
+          sender_psid,
+          `False birth date. If you wish to start again write #getStarted. See You`
+        );
       }
       // valid information, executed count birthda
       else {
         // show remaining days until birthday
-        callSendAPI(sender_psid, `There are ${remaining_days} days until your birthday!`)
+        callSendAPI(
+          sender_psid,
+          `There are ${remaining_days} days until your birthday!`
+        );
       }
-    }
-    else if(msg==="no" ||msg==="maybe later" || msg==="nope" || msg==="not at all") {
-      callSendAPI(sender_psid,`Thank you for your answer. If you wish to start again write #getStarted. See You`);
-    }
-    else {
+    } else if (
+      msg === "no" ||
+      msg === "maybe later" ||
+      msg === "nope" ||
+      msg === "not at all"
+    ) {
+      callSendAPI(
+        sender_psid,
+        `Thank you for your answer. If you wish to start again write #getStarted. See You`
+      );
+    } else {
       callSendAPI(
         sender_psid,
         `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
