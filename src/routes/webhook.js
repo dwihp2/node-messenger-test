@@ -168,6 +168,18 @@ function handleTextMessage(sender_psid, message) {
 
   let response;
 
+  if (msg === "#getStarted") {
+    FIRST_NAME = "";
+    BIRTH_DATE = "";
+    LATEST_MESSAGE = "";
+    PREV_OF_LATEST = "";
+    PREV_WORD = "";
+
+    // uncomment following for clearing messages
+    // ARR_MESSAGES = [];
+    // COUNT_MESSAGES = 0;
+  }
+
   // greeting case
   if (greeting.includes(msg)) {
     if (FIRST_NAME === "") {
