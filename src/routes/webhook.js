@@ -314,10 +314,7 @@ function handleTextMessage(sender_psid, message) {
   // accept case
   else if (accept_conv.includes(mess)) {
     if (FIRST_NAME === "") {
-      if (
-        countWords(LATEST_MESSAGE) === 1 &&
-        !greeting.includes(PREV_OF_PREV)
-      ) {
+      if (countWords(LATEST_MESSAGE) === 1 && !greeting.includes(PREV_WORD)) {
         for (var i = 0; i < accept_conv.length; i++) {
           if (mess.includes(accept_conv[i])) break;
         }
@@ -364,7 +361,7 @@ function handleTextMessage(sender_psid, message) {
       } else {
         callSendAPI(
           sender_psid,
-          `You agreed that your first name is ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+          `Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
         );
       }
     } else if (FIRST_NAME !== "" && BIRTH_DATE !== "") {
@@ -542,7 +539,7 @@ function handleQuickReply(sender_psid, message) {
 
     callSendAPI(
       sender_psid,
-      `You agreed that your first name is ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+      `Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
     );
   }
   // user agreed on his birth date
