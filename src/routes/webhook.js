@@ -273,7 +273,7 @@ function handleTextMessage(sender_psid, message) {
   let resp;
 
   // reinitialize conversation
-  if (mess === "#getStarted") {
+  if (mess === "#getstarted") {
     FIRST_NAME = "";
     BIRTH_DATE = "";
     LATEST_MESSAGE = "";
@@ -286,7 +286,7 @@ function handleTextMessage(sender_psid, message) {
   }
 
   // greeting case
-  if (greeting.includes(mess) || mess === "#getStarted") {
+  if (greeting.includes(mess) || mess === "#getstarted") {
     if (FIRST_NAME === "") {
       resp = {
         text: "Hello! Would you like to answer few questions?",
@@ -315,7 +315,7 @@ function handleTextMessage(sender_psid, message) {
   else if (accept_conv.includes(mess)) {
     if (FIRST_NAME === "") {
       if (countWords(LATEST_MESSAGE) === 1 && !greeting.includes(PREV_WORD)) {
-        for (var i = 0; i < accept_conv.length; i++) {
+        for (var i = 3; i < accept_conv.length; i++) {
           if (mess.includes(accept_conv[i])) break;
         }
 
@@ -328,10 +328,16 @@ function handleTextMessage(sender_psid, message) {
             `We will take your first name as ${FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
           );
         } else {
-          callSendAPI(sender_psid, `First, please write below your first name`);
+          callSendAPI(
+            sender_psid,
+            `First, please write below your first name (minimum 3 character)`
+          );
         }
       } else {
-        callSendAPI(sender_psid, `First, please write below your first name`);
+        callSendAPI(
+          sender_psid,
+          `First, please write below your first name (minimum 3 character)`
+        );
       }
     } else if (BIRTH_DATE === "") {
       if (
@@ -459,32 +465,6 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// // function to count birth days
-// function countBirthDays(birthDate = BIRTH_DATE) {
-//   var today = new Date();
-
-//   // we extract user birth date information in decimal
-//   var user_year = parseInt(birthDate.substring(0, 4), 10);
-//   var user_month = parseInt(birthDate.substring(5, 7), 10);
-//   var user_day = parseInt(birthDate.substring(8, 10), 10);
-
-//   // bad information introduced
-//   if (user_year >= today.getFullYear() || user_month > 12 || user_day > 31) {
-//     return -1;
-//   } else {
-//     // valid information -> proceed to calculus
-//     const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
-//     let days_left = Math.round(
-//       Math.abs(
-//         (today - new Date(today.getFullYear(), user_month - 1, user_day)) /
-//           oneDay
-//       )
-//     );
-
-//     return days_left;
-//   }
-// }
-
 // func to count birth day
 function countBirthDays(birthDate = BIRTH_DATE) {
   let today = moment().format("YYYY-MM-DD");
@@ -519,7 +499,10 @@ function handleQuickReply(sender_psid, message) {
   // user agreed to answer questions
   if (mess === "sure") {
     if (!FIRST_NAME) {
-      callSendAPI(sender_psid, `First, please write below your first name`);
+      callSendAPI(
+        sender_psid,
+        `First, please write below your first name (minimum 3 character)`
+      );
     } else {
       callSendAPI(
         sender_psid,
