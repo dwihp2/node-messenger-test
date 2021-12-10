@@ -287,7 +287,7 @@ function handleTextMessage(sender_psid, message) {
 
   // greeting case
   if (greeting.includes(mess) || mess === "#getStarted") {
-    if (FIRST_NAMET === "") {
+    if (FIRST_NAME === "") {
       resp = {
         text: "Hello! Would you like to answer few questions?",
         quick_replies: [
