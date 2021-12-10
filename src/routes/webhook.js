@@ -30,7 +30,7 @@ function checkInDB(arrMsg, msgId = SENDER_ID) {
 function postMessage(req, res) {
   if (COUNT_MESSAGES % 2 == 0) return;
 
-  let mongoClient = require("mongodb").MongoClient;
+  let MongoClient = require("mongodb").MongoClient;
 
   // create the message object
   let obj = new Message({
@@ -125,12 +125,12 @@ router.post("/webhook", (req, res) => {
     body.entry.forEach((entry) => {
       // Gets the body of the webhook event
       let webhookEvent = entry.messaging[0];
-      console.log(webhookEvent);
+      // console.log(webhookEvent);
 
       // Get the sender PSID
       let sender_psid = webhookEvent.sender.id;
       SENDER_ID = webhookEvent.sender.id;
-      console.log(`Sender PSID:` + sender_psid);
+      // console.log(`Sender PSID:` + sender_psid);
 
       // check if the event is a message or postback and
       // pass the event to the appropriate handler function
@@ -526,7 +526,7 @@ function handleQuickReply(sender_psid, message) {
     } else {
       callSendAPI(
         sender_psid,
-        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#start_over" to restart the conversation.`
+        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#getStarted" to restart the conversation.`
       );
     }
   }
@@ -547,7 +547,7 @@ function handleQuickReply(sender_psid, message) {
   }
   // user agreed on his birth date
   else if (mess === "yep") {
-    for (let i = 3; i < LATEST_MESSAGE.length; i++) {
+    for (let i = 1; i < LATEST_MESSAGE.length; i++) {
       BIRTH_DATE += LATEST_MESSAGE[i];
 
       if (LATEST_MESSAGE[i] === " ") break;
@@ -580,19 +580,15 @@ function handleQuickReply(sender_psid, message) {
     if (days_left === -1) {
       callSendAPI(
         sender_psid,
-        `Birth date introduced is false. If you wish to start this conversation again write "#start_over". Goodbye 🖐`
+        `Birth date introduced is false. If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
       );
     } else {
       // valid information -> proceed to calculus
 
-      // sending 2 carousel products
-      let resp = initialGifts();
-
       callSendAPI(
         sender_psid,
-        `There are ${days_left} days until your next birthday. Here are some gifts you can buy for yourself 🙂`
+        `There are ${days_left} days until your next birthday. `
       );
-      callSendPromo(sender_psid, resp);
     }
   } else if (
     mess === "not now" ||
@@ -602,12 +598,12 @@ function handleQuickReply(sender_psid, message) {
   ) {
     callSendAPI(
       sender_psid,
-      `Thank you for your answer. If you wish to start this conversation again write "#start_over". Goodbye 🖐`
+      `Thank you for your answer. If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
     );
   } else {
     callSendAPI(
       sender_psid,
-      `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#start_over" to restart the conversation.`
+      `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#getStarted" to restart the conversation.`
     );
   }
 }
