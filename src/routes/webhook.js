@@ -58,7 +58,7 @@ router.post("/webhook", (req, res) => {
 });
 
 // GET webhook
-router.get("webhook", (req, res) => {
+router.get("/webhook", (req, res) => {
   // Place your verify token here, should be a random string
   let VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
@@ -73,7 +73,7 @@ router.get("webhook", (req, res) => {
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
       // responds with the challenge token from the request
       console.log("WEBHOOK_VERIFIED");
-      res.send(200).send(challenge);
+      res.status(200).send(challenge);
     } else {
       // Respond with 403 forbidden if verify tokens do not match
       res.sendStatus(404);
