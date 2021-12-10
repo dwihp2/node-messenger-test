@@ -15,6 +15,106 @@ let PREV_OF_LATEST = "";
 let FIRST_NAME = "";
 let BIRTH_DATE = "";
 
+// function to check whether user in DB
+// if yes, return position in DB
+function checkInDB(arrMsg, msgId = SENDER_ID) {
+  for (let i = 0; i < arrMsg.length; i++) {
+    if (arrMsg[i].senderId === msgId) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// function to add message to DB
+function postMessage(req, res) {
+  if (COUNT_MESSAGES % 2 == 0) return;
+
+  let mongoClient = require("mongodb").MongoClient;
+
+  // create the message object
+  let obj = new Message({
+    senderId: SENDER_ID,
+    text: [WEBHOOK_MSG],
+  });
+
+  console.log(`OBJ` + obj);
+
+  MongoClient.connect(
+    process.ent.DB_CONNECTION,
+    {
+      auth: {
+        user: process.env.MONGO_DB_USER,
+        password: process.env.MONGO_DB_PASSWORD,
+      },
+    },
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    },
+    (err, client) => {
+      if (err) {
+        throw err;
+      }
+
+      console.log("Connected to the server for inserting message");
+
+      // Get database name
+      let db = client.db(process.env.DB_NAME);
+
+      // search if user already in database
+      db.collection(process.env.DB_COLLECTION)
+        .find({})
+        .toArray((err, res) => {
+          if (err) {
+            throw err;
+          }
+          console.log("Display data: " + res);
+
+          // check whwther user is in DB
+          let posInDB = checkInDB(res);
+
+          // if user is not in DB
+          if (posInDB < 0) {
+            db.collection(process.env.DB_COLLECTION).insertOne(
+              obj,
+              (error, res) => {
+                if (error) {
+                  throw error;
+                }
+
+                console.log(
+                  "1 message inserted for not in DB userId=" + SENDER_ID
+                );
+                client.close();
+              }
+            );
+          }
+          // user in DB
+          else {
+            let userArrMsg = res[posInDB]._id;
+            console.log("User Messages: " + userArrMsg);
+
+            let newText = [];
+            newText = [...userArrMsg];
+
+            db.collection(process.env.DB_COLLECTION).update(
+              {
+                _id: res[posInDB]._id,
+              },
+              {
+                $set: { text: newText },
+              }
+            );
+
+            console.log("1 message inserted for in DB userId=" + SENDER_ID);
+            client.close();
+          }
+        });
+    }
+  );
+}
+
 // Create endpoint webhook
 router.post("/webhook", (req, res) => {
   let body = req.body;
@@ -38,12 +138,12 @@ router.post("/webhook", (req, res) => {
         COUNT_MESSAGES += 1;
         WEBHOOK_MSG = webhookEvent.message.text;
 
-        // postMessage(req, res);
+        postMessage(req, res);
         handleMessage(sender_psid, webhookEvent.message);
       } else if (webhookEvent.postback) {
         COUNT_MESSAGES += 1;
 
-        // postMessage(req, res);
+        postMessage(req, res);
         WEBHOOK_MSG = webhookEvent.postback.payload;
         handlePostback(sender_psid, webhookEvent.postback);
       }
@@ -120,7 +220,7 @@ function callSendAPI(sender_psid, response, quick_reply = { text: "" }) {
 }
 
 function handleMessage(sender_psid, message) {
-  // check what kind of message received
+  // check kind of message
   try {
     if (message.quick_reply) {
       handleQuickReply(sender_psid, message);
@@ -128,17 +228,18 @@ function handleMessage(sender_psid, message) {
       handleAttachmentMessage(sender_psid, message);
     } else if (message.text) {
       handleTextMessage(sender_psid, message);
-    }
-    // something else
-    else {
+    } else {
       callSendAPI(
         sender_psid,
-        `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
+        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#getStarted" to restart the conversation..`
       );
     }
-  } catch (err) {
-    console.error(err);
-    callSendAPI(sender_psid, `An error has occured: ${error}`);
+  } catch (error) {
+    console.error(error);
+    callSendAPI(
+      sender_psid,
+      `An error has occured: '${error}'. We have been notified and will fix the issue shortly!`
+    );
   }
 }
 
@@ -148,27 +249,31 @@ function handleAttachmentMessage(sender_psid, message) {
 
 function handleTextMessage(sender_psid, message) {
   // getting current message
-  let msg = message.text;
-  msg = msg.toLowerCase();
+  let mess = message.text;
+  mess = mess.toLowerCase();
 
   PREV_WORD = PREV_OF_LATEST;
   PREV_OF_LATEST = LATEST_MESSAGE;
-  LATEST_MESSAGE = msg;
+  LATEST_MESSAGE = mess;
 
-  // kind of accepted reaction from user
-  let greeting = ["hi", "hai", "hello"];
-  let accepted_msg = ["yeah", "yup", "sure", "yep", "yes", "y"];
-  let deny_msg = ["nah", "no", "nope", "maybe later"];
-  let thanks_msg = [
+  // message.nlp did not work -> made a workaround
+  let greeting = ["hi", "hey", "hello"];
+  let accept_conv = ["yup", "yes", "yeah", "sure", "yep", "i do"];
+  let deny_conv = ["no", "nah", "nope", "not now", "maybe later"];
+  let thanks_conv = [
     "thanks",
+    "thx",
     "thank you",
-    "thanks a lot",
     "thank you very much",
+    "thanks a lot",
+    "thanks!",
+    "thank you!",
   ];
 
-  let response;
+  let resp;
 
-  if (msg === "#getStarted") {
+  // reinitialize conversation
+  if (mess === "#getStarted") {
     FIRST_NAME = "";
     BIRTH_DATE = "";
     LATEST_MESSAGE = "";
@@ -181,48 +286,49 @@ function handleTextMessage(sender_psid, message) {
   }
 
   // greeting case
-  if (greeting.includes(msg)) {
-    if (FIRST_NAME === "") {
-      response = {
+  if (greeting.includes(mess) || mess === "#getStarted") {
+    if (FIRST_NAMET === "") {
+      resp = {
         text: "Hello! Would you like to answer few questions?",
         quick_replies: [
           {
-            "content-type": "text",
+            content_type: "text",
             title: "Sure",
             payload: "sure",
           },
           {
-            "content-type": "text",
-            title: "Nope",
-            payload: "nope",
+            content_type: "text",
+            title: "Not now",
+            payload: "not now",
           },
         ],
       };
-      callSendAPI(sender_psid, ``, response);
+      callSendAPI(sender_psid, ``, resp);
     } else {
       callSendAPI(
         sender_psid,
-        `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
+        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#getStarted" to restart the conversation.`
       );
     }
   }
-
   // accept case
-  else if (accepted_msg.includes(msg)) {
-    // FIRST_NAME empty
+  else if (accept_conv.includes(mess)) {
     if (FIRST_NAME === "") {
-      if (countWords(LATEST_MESSAGE) === 1 && !greeting.includes(PREV_WORD)) {
-        for (const i = 0; i < accepted_msg.length; i++) {
-          if (msg.includes(accepted_msg[i])) break;
+      if (
+        countWords(LATEST_MESSAGE) === 1 &&
+        !greeting.includes(PREV_OF_PREV)
+      ) {
+        for (var i = 0; i < accept_conv.length; i++) {
+          if (mess.includes(accept_conv[i])) break;
         }
 
-        if (i !== accepted_msg.length) {
+        if (i !== accept_conv.length) {
           FIRST_NAME = capitalizeFirstLetter(extractName());
           console.log(FIRST_NAME);
 
           callSendAPI(
             sender_psid,
-            `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
+            `We will take your first name as ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
           );
         } else {
           callSendAPI(sender_psid, `First, please write below your first name`);
@@ -230,9 +336,7 @@ function handleTextMessage(sender_psid, message) {
       } else {
         callSendAPI(sender_psid, `First, please write below your first name`);
       }
-    }
-    // BIRTH_DATE empty
-    else if (BIRTH_DATE === "") {
+    } else if (BIRTH_DATE === "") {
       if (
         countWords(LATEST_MESSAGE) === 1 &&
         extractDate().split("-").length - 1 === 2
@@ -240,8 +344,8 @@ function handleTextMessage(sender_psid, message) {
         BIRTH_DATE = PREV_OF_LATEST;
         console.log(BIRTH_DATE);
 
-        let response = {
-          text: `We record your birth date is ${BIRTH_DATE}. Would you like to know how many days until your birthday?`,
+        let resp = {
+          text: `You agreed that your birth date is ${USER_BIRTH_DATE}. Would you like to know how many days are until your next birtday?`,
           quick_replies: [
             {
               content_type: "text",
@@ -250,63 +354,64 @@ function handleTextMessage(sender_psid, message) {
             },
             {
               content_type: "text",
-              title: "Not today",
-              payload: "not today",
+              title: "Not interested",
+              payload: "not interested",
             },
           ],
         };
 
-        callSendAPI(sender_psid, ``, response);
+        callSendAPI(sender_psid, ``, resp);
       } else {
         callSendAPI(
           sender_psid,
-          `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
+          `You agreed that your first name is ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
         );
       }
-    }
-    // if first name and birth date is not empty
-    else if (FIRST_NAME !== "" && BIRTH_DATE !== "")
-      var remaining_days = countBirthDays();
+    } else if (FIRST_NAME !== "" && BIRTH_DATE !== "") {
+      let days_left = countBirthDays();
 
-    if (remaining_days === -1) {
-      callSendAPI(
-        sender_psid,
-        `False birth date. If you wish to start again write #getStarted. See You`
-      );
+      // bad information introduced
+      if (days_left === -1) {
+        callSendAPI(
+          sender_psid,
+          `Birth date introduced is false. If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
+        );
+      } else {
+        callSendAPI(
+          sender_psid,
+          `There are ${days_left} days until your next birthday`
+        );
+      }
     } else {
-      // show remaining days until birthday
       callSendAPI(
         sender_psid,
-        `There are ${remaining_days} days until your birthday!`
+        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#getStarted" to restart the conversation.`
       );
     }
   }
-
   // deny case
-  else if (deny_msg.includes(msg)) {
+  else if (deny_conv.includes(mess)) {
     callSendAPI(
       sender_psid,
-      `Thank you for your answer. If you wish to start again write #getStarted. See You`
+      `Thank you for your answer. If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
     );
   }
-
   // gratitude case
-  else if (thanks_msg.includes(msg)) {
+  else if (thanks_conv.includes(mess)) {
     callSendAPI(
       sender_psid,
-      `You're welcome!. If you wish to start again write #getStarted. See You`
+      `You're welcome! If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
     );
   }
-
-  //
+  // user may have introduced first name and/or birth date
   else {
-    let response;
+    let resp;
 
-    // if bot dont know the first name
+    // if we don't know user first name yet
     if (!FIRST_NAME) {
       LATEST_MESSAGE = capitalizeFirstLetter(LATEST_MESSAGE);
-      response = {
-        text: `Is it ${LATEST_MESSAGE} your first name?`,
+      resp = {
+        text: "Is " + LATEST_MESSAGE + " your first name?",
         quick_replies: [
           {
             content_type: "text",
@@ -321,186 +426,219 @@ function handleTextMessage(sender_psid, message) {
         ],
       };
 
-      callSendAPI(sender_psid, ``, response);
-    }
-
-    // if bot dont know the birth date
+      callSendAPI(sender_psid, ``, resp);
+    } // if we don't know user birth date yet
     else if (!BIRTH_DATE) {
-      response = {
-        text: `Is it ${LATEST_MESSAGE} your birth date?`,
+      resp = {
+        text: "Is " + LATEST_MESSAGE + " your birth date?",
         quick_replies: [
           {
             content_type: "text",
-            title: "Yeah",
-            payload: "yeah",
+            title: "Yep",
+            payload: "yep",
           },
           {
             content_type: "text",
-            title: "Nope",
-            payload: "nope",
+            title: "Not at all",
+            payload: "not at all",
           },
         ],
       };
 
-      callSendAPI(sender_psid, ``, response);
+      callSendAPI(sender_psid, ``, resp);
     }
     // something else
     else {
       callSendAPI(
         sender_psid,
-        `Thank you for your answer. If you wish to start again write #getStarted. See You`
+        `Thank you for your answer. If you wish to start this conversation again write "#getStarted". Goodbye 🖐`
       );
     }
   }
+}
 
-  // function to capitalize first letter of a word
-  function capitalizeFirstLetter(string) {
-    return string.charAt[0].toUpperCase() + string.slice(1);
+// function to capitalize first letter of a word
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// function to count birth days
+function countBirthDays(birthDate = USER_BIRTH_DATE) {
+  var today = new Date();
+
+  // we extract user birth date information in decimal
+  var user_year = parseInt(birthDate.substring(0, 4), 10);
+  var user_month = parseInt(birthDate.substring(5, 7), 10);
+  var user_day = parseInt(birthDate.substring(8, 10), 10);
+
+  // bad information introduced
+  if (user_year >= today.getFullYear() || user_month > 12 || user_day > 31) {
+    return -1;
+  } else {
+    // valid information -> proceed to calculus
+    const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+    let days_left = Math.round(
+      Math.abs(
+        (today - new Date(today.getFullYear(), user_month - 1, user_day)) /
+          oneDay
+      )
+    );
+
+    return days_left;
   }
+}
 
-  // func to count birth day
-  function countBirthDays(birthDate = BIRTH_DATE) {
-    let today = moment().format("YYYY-MM-DD");
+// // func to count birth day
+// function countBirthDays(birthDate = BIRTH_DATE) {
+//   let today = moment().format("YYYY-MM-DD");
 
-    // calculate current age of person in years
-    const years = moment().diff(birthDate, "years");
+//   // calculate current age of person in years
+//   const years = moment().diff(birthDate, "years");
 
-    // Special case if birthday is today; we do NOT need an extra year added
-    const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
+//   // Special case if birthday is today; we do NOT need an extra year added
+//   const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
 
-    // Add age plus one year (unless birthday is today) to get next birthday
-    const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
+//   // Add age plus one year (unless birthday is today) to get next birthday
+//   const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
 
-    // Final calculation in days
-    const daysUntilBirthday = nextBirthday.diff(today, "days");
+//   // Final calculation in days
+//   const daysUntilBirthday = nextBirthday.diff(today, "days");
 
-    // bad information
-    if (years > moment().get("year")) {
-      return -1;
-    }
-    // valid information
-    else {
-      return daysUntilBirthday;
-    }
-  }
+//   // bad information
+//   if (years > moment().get("year")) {
+//     return -1;
+//   }
+//   // valid information
+//   else {
+//     return daysUntilBirthday;
+//   }
+// }
 
-  function handleQuickReply(sender_psid, message) {
-    let msg = message.text;
-    msg = msg.toLowerCase();
+// function to handle quick replies
+function handleQuickReply(sender_psid, message) {
+  let mess = message.text;
+  mess = mess.toLowerCase();
 
-    if (msg === "sure") {
-      if (!FIRST_NAME) {
-        callSendAPI(sender_psid, `First, please write below your first name`);
-      } else {
-        callSendAPI(
-          sender_psid,
-          `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
-        );
-      }
-    }
-    // user agreed on his first name
-    else if (msg === "yes") {
-      for (const i = 3; i < LATEST_MESSAGE.length; i++) {
-        FIRST_NAME += LATEST_MESSAGE[i];
-
-        if (LATEST_MESSAGE[i] === " ") break;
-      }
-
-      FIRST_NAME = capitalizeFirstLetter(FIRST_NAME);
-      console.log(FIRST_NAME);
-
-      callSendAPI(
-        sender_psid,
-        `We will record your first name as ${FIRST_NAME}, Next, what is your birth date? Write it down below in the format YYYY-MM-DD. Example: 1994-01-18`
-      );
-    }
-    // user aggreed on his birth date
-    else if (msg === "yeah") {
-      for (const i = 3; i < LATEST_MESSAGE.length; i++) {
-        BIRTH_DATE += LATEST_MESSAGE[i];
-
-        if (LATEST_MESSAGE[i] === " ") break;
-      }
-      console.log(BIRTH_DATE);
-
-      let response = {
-        text: `We record your birth date is ${BIRTH_DATE}. Would you like to know how many days until your birthday?`,
-        quick_replies: [
-          {
-            content_type: "text",
-            title: "I do",
-            payload: "i do",
-          },
-          {
-            content_type: "text",
-            title: "Not today",
-            payload: "not today",
-          },
-        ],
-      };
-
-      callSendAPI(sender_psid, ``, response);
-    }
-    // user agreed to know bith date days
-    else if (msg === "i do") {
-      var remaining_days = countBirthDays();
-
-      // bad information
-      if (remaining_days === -1) {
-        callSendAPI(
-          sender_psid,
-          `False birth date. If you wish to start again write #getStarted. See You`
-        );
-      }
-      // valid information, executed count birthda
-      else {
-        // show remaining days until birthday
-        callSendAPI(
-          sender_psid,
-          `There are ${remaining_days} days until your birthday!`
-        );
-      }
-    } else if (
-      msg === "no" ||
-      msg === "maybe later" ||
-      msg === "nope" ||
-      msg === "not at all"
-    ) {
-      callSendAPI(
-        sender_psid,
-        `Thank you for your answer. If you wish to start again write #getStarted. See You`
-      );
+  // user agreed to answer questions
+  if (mess === "sure") {
+    if (!FIRST_NAME) {
+      callSendAPI(sender_psid, `First, please write below your first name`);
     } else {
       callSendAPI(
         sender_psid,
-        `Cant process incoming message, bot need to train more. You said ${message.text}. Try to say Hi or #getStarted to start again`
+        `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#start_over" to restart the conversation.`
       );
     }
   }
+  // user agreed on his first name
+  else if (mess === "yes") {
+    for (let i = 3; i < LATEST_MESSAGE.length; i++) {
+      FIRST_NAME += LATEST_MESSAGE[i];
 
-  function countWords(string) {
-    var matches = str.match(/[\w\d\’\'-]+/gi);
-    return matches ? matches.length : 0;
-  }
-
-  // function to extract first name of user
-  function extractName(firstName = PREV_OF_LATEST) {
-    let name = "";
-    for (let i = 3; i < FIRST_NAME; i++) {
-      name += firstName[i];
+      if (LATEST_MESSAGE[i] === " ") break;
     }
-    return name;
-  }
+    FIRST_NAME = capitalizeFirstLetter(FIRST_NAME);
+    console.log(USER_FIRST_NAME);
 
-  // function to extract date from user
-  function extractDate(date = PREF_OF_LATEST) {
-    let dt = "";
-    for (let i = 3; i < date.length; i++) {
-      if (date[i] === " ") break;
-      dt += date[i];
-    }
-    return dt;
+    callSendAPI(
+      sender_psid,
+      `You agreed that your first name is ${USER_FIRST_NAME}. Secondly, we would like to know your birth date. Write it down below in the format YYYY-MM-DD. Example: 1987-03-25`
+    );
   }
+  // user agreed on his birth date
+  else if (mess === "yep") {
+    for (let i = 3; i < LATEST_MESSAGE.length; i++) {
+      BIRTH_DATE += LATEST_MESSAGE[i];
+
+      if (LATEST_MESSAGE[i] === " ") break;
+    }
+    console.log(BIRTH_DATE);
+
+    let resp = {
+      text: `You agreed that your birth date is ${BIRTH_DATE}. Would you like to know how many days are until your next birtday?`,
+      quick_replies: [
+        {
+          content_type: "text",
+          title: "I do",
+          payload: "i do",
+        },
+        {
+          content_type: "text",
+          title: "Not interested",
+          payload: "not interested",
+        },
+      ],
+    };
+
+    callSendAPI(sender_psid, ``, resp);
+  }
+  // user agreed to know birth date days
+  else if (mess === "i do") {
+    let days_left = countBirthDays();
+
+    // bad information introduced
+    if (days_left === -1) {
+      callSendAPI(
+        sender_psid,
+        `Birth date introduced is false. If you wish to start this conversation again write "#start_over". Goodbye 🖐`
+      );
+    } else {
+      // valid information -> proceed to calculus
+
+      // sending 2 carousel products
+      let resp = initialGifts();
+
+      callSendAPI(
+        sender_psid,
+        `There are ${days_left} days until your next birthday. Here are some gifts you can buy for yourself 🙂`
+      );
+      callSendPromo(sender_psid, resp);
+    }
+  } else if (
+    mess === "not now" ||
+    mess === "no" ||
+    mess === "not at all" ||
+    mess === "not interested"
+  ) {
+    callSendAPI(
+      sender_psid,
+      `Thank you for your answer. If you wish to start this conversation again write "#start_over". Goodbye 🖐`
+    );
+  } else {
+    callSendAPI(
+      sender_psid,
+      `The bot needs more training. You said "${message.text}". Try to say "Hi" or "#start_over" to restart the conversation.`
+    );
+  }
+}
+
+// function used to count number of words in a string
+function countWords(str) {
+  var matches = str.match(/[\w\d\’\'-]+/gi);
+  return matches ? matches.length : 0;
+}
+
+// function used to extract user first name
+// from previous latest message
+function extractName(givenName = PREV_OF_LATEST) {
+  let name = "";
+  for (let i = 3; i < givenName.length; i++) {
+    if (givenName[i] === " ") break;
+
+    name += givenName[i];
+  }
+  return name;
+}
+
+// function to extract date given by user
+function extractDate(givenDate = PREV_OF_LATEST) {
+  let dt = "";
+  for (let i = 3; i < givenDate.length; i++) {
+    if (givenDate[i] === " ") break;
+
+    dt += givenDate[i];
+  }
+  return dt;
 }
 
 module.exports = router;
