@@ -1,0 +1,33 @@
+{
+  "name": "messenger-test",
+  "version": "1.0.0",
+  "description": "an interview test to create chatbot with node js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dwihp2/node-messenger-test.git"
+  },
+  "keywords": [
+    "webhook",
+    "messenger",
+    "nodejs"
+  ],
+  "author": "Muhammad Dwi Heryanto Putro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dwihp2/node-messenger-test/issues"
+  },
+  "homepage": "https://github.com/dwihp2/node-messenger-test#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongodb": "^4.2.1",
+    "mongoose": "^6.1.1",
+    "path": "^0.12.7",
+    "request": "^2.88.2"
+  }
+}
