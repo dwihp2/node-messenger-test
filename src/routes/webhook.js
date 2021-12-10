@@ -38,12 +38,12 @@ router.post("/webhook", (req, res) => {
         COUNT_MESSAGES += 1;
         WEBHOOK_MSG = webhookEvent.message.text;
 
-        postMessage(req, res);
+        // postMessage(req, res);
         handleMessage(sender_psid, webhookEvent.message);
       } else if (webhookEvent.postback) {
         COUNT_MESSAGES += 1;
 
-        postMessage(req, res);
+        // postMessage(req, res);
         WEBHOOK_MSG = webhookEvent.postback.payload;
         handlePostback(sender_psid, webhookEvent.postback);
       }
