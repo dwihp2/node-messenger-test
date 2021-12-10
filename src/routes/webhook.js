@@ -496,10 +496,10 @@ function countBirthDays(birthDate = BIRTH_DATE) {
   const years = moment().diff(birthDate, "years");
 
   // Special case if birthday is today; we do NOT need an extra year added
-  const adjustToday = birthdate.substring(5) === today.substring(5) ? 0 : 1;
+  const adjustToday = birthDate.substring(5) === today.substring(5) ? 0 : 1;
 
   // Add age plus one year (unless birthday is today) to get next birthday
-  const nextBirthday = moment(birthdate).add(years + adjustToday, "years");
+  const nextBirthday = moment(birthDate).add(years + adjustToday, "years");
 
   // Final calculation in days
   const daysUntilBirthday = nextBirthday.diff(today, "days");
@@ -547,7 +547,7 @@ function handleQuickReply(sender_psid, message) {
   }
   // user agreed on his birth date
   else if (mess === "yep") {
-    for (let i = 1; i < LATEST_MESSAGE.length; i++) {
+    for (let i = 0; i < LATEST_MESSAGE.length; i++) {
       BIRTH_DATE += LATEST_MESSAGE[i];
 
       if (LATEST_MESSAGE[i] === " ") break;
