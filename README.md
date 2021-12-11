@@ -8,8 +8,10 @@ A Facebook Messenger bot using Node JS, with task to ask first name, birth date,
 2. Run ```npm install``` to install depedencies
 3. Rename .env.example file to .env file and fill the required variables
    
-   | List | Description |
-| --- | --- |
+
+   
+| List | Description |
+| ------------- | ------------------------------------------------------------------------------ |
 | DB_NAME=test | your DB name, or by default it create "test" database name |
 | DB_CONNECTION= | mongodb connect url. ex: mongodb://mongo:... |
 | DB_COLLECTION= | collection used to store messages, im using "messages" |
@@ -18,7 +20,8 @@ A Facebook Messenger bot using Node JS, with task to ask first name, birth date,
 | VERIFY_TOKEN=  | random string, but should be same as in the messenger app setting in facebook |
 | PAGE_ACCESS_TOKEN= | generated from messenger setting (in section Access token) |
 
-4. Run ```npm start``` for starting project
+
+1. Run ```npm start``` for starting project
 
 I'm suggesting to host this server in cloud, you can use Heroku for that
 But in this project i'm using https://railway.app, its like Heroku but its free
