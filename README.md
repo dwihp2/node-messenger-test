@@ -42,6 +42,7 @@ How to start conversation:
 7. There are quick reply for that, if you agree then bot reply how many days till your next birthday
 8. If you disagree, bot reply with gratitude and the chat end here
 
+![GIF bot conversation](https://github.com/dwihp2/node-messenger-test/blob/main/Gif%20Recording.gif)
 
 ### Storage of messages
 
