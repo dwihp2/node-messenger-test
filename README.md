@@ -7,14 +7,14 @@ A Facebook Messenger bot using Node JS, with task to ask first name, birth date,
 1. Clone this project
 2. Run ```npm install``` to install depedencies
 3. Rename .env.example file to .env file and fill the required variables
-    DB_NAME=test        your DB name, or by default it create "test" database name
-    DB_CONNECTION=      mongodb connect url. ex: mongodb://mongo:... 
-    DB_COLLECTION=      collection used to store messages, im using "messages"
-    MONGO_DB_PASSWORD=  password of your database
-    MONGO_DB_USER=      username of your database
+    - DB_NAME=test        your DB name, or by default it create "test" database name
+    - DB_CONNECTION=      mongodb connect url. ex: mongodb://mongo:... 
+    - DB_COLLECTION=      collection used to store messages, im using "messages"
+    - MONGO_DB_PASSWORD=  password of your database
+    - MONGO_DB_USER=      username of your database
 
-    VERIFY_TOKEN=       random string, but should be same as in the messenger app setting in facebook
-    PAGE_ACCESS_TOKEN=  generated from messenger setting (in section Access token)
+    - VERIFY_TOKEN=       random string, but should be same as in the messenger app setting in facebook
+    - PAGE_ACCESS_TOKEN=  generated from messenger setting (in section Access token)
 
 4. Run ```npm start``` for starting project
 
@@ -43,11 +43,6 @@ How to start conversation:
 All the messages received from users are stored in a MongoDB Atlas database. Each website visitor has an unique id when he starts a Messenger conversation, making the storage of messages structured in an easy way.
 
 
-### Testing the code
-
-1. Testing the connection with the MongoDB, inserting a message was done [here](https://github.com/JusticeBringer/Node.js-Messenger-Bot/blob/master/src/controllers/messagesController.test.js)
-2. Testing the helper functions for the conversation with the Messenger Bot, such as extraction of user first name, birth date and other, was done [here](https://github.com/JusticeBringer/Node.js-Messenger-Bot/blob/master/src/controllers/chatBotController.test.js)
-3. Testing the rendering of "header" and "head links" was done [here](https://github.com/JusticeBringer/Node.js-Messenger-Bot/blob/master/src/controllers/headerController.test.js) and [here](https://github.com/JusticeBringer/Node.js-Messenger-Bot/blob/master/src/controllers/headLinksController.test.js)
 
 ### Technologies used
 
