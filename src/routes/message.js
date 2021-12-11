@@ -11,7 +11,7 @@ const router = new express.Router();
 router.get("/messages", async (req, res) => {
   try {
     const message = await Message.find({});
-    res.send(JSON.stringify(message));
+    res.render(JSON.stringify(message));
   } catch (e) {
     res.status(400).send(e);
   }
@@ -23,7 +23,7 @@ router.get("/messages/:id", async (req, res) => {
   try {
     const message = await Message.findById(_id);
     if (message) return res.sendStatus(404);
-    return res.send(JSON.stringify(message));
+    return res.render(message);
   } catch (e) {
     return res.status(400).send(e);
   }
