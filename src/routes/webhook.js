@@ -41,7 +41,7 @@ function postMessage(req, res) {
   console.log(`OBJ` + obj);
 
   MongoClient.connect(
-    process.ent.DB_CONNECTION,
+    process.env.DB_CONNECTION,
     {
       auth: {
         user: process.env.MONGO_DB_USER,
