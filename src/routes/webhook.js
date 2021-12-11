@@ -5,6 +5,8 @@ const router = new express.Router();
 const moment = require("moment");
 const Message = require("../models/message.js");
 
+const MongoClient = require("mongodb").MongoClient;
+
 // global variable for storing message information
 let COUNT_MESSAGES = 0;
 let WEBHOOK_MSG = "";
@@ -29,8 +31,6 @@ function checkInDB(arrMsg, msgId = SENDER_ID) {
 // function to add a message to DB
 let postMessage = (req, res) => {
   if (COUNT_MESSAGES % 2 == 0) return;
-
-  let MongoClient = require("mongodb").MongoClient;
 
   // creating the message object
   let obj = new Message({
@@ -60,11 +60,10 @@ let postMessage = (req, res) => {
       console.log("Connected to the server for inserting message");
 
       // Get database name
-      // let db = client.db(process.env.DB_NAME);
+      let db = client.db(process.env.DB_NAME);
 
       // we search if user already in database
-      client
-        .collection(process.env.DB_COLLECTION)
+      db.collection(process.env.DB_COLLECTION)
         .find({})
         .toArray(function (err, result) {
           if (err) {
@@ -78,9 +77,9 @@ let postMessage = (req, res) => {
 
           // if user is not in DB
           if (posInDB < 0) {
-            client
-              .collection(process.env.DB_COLLECTION)
-              .insertOne(obj, function (error, res) {
+            db.collection(process.env.DB_COLLECTION).insertOne(
+              obj,
+              function (error, res) {
                 if (error) {
                   throw error;
                 }
@@ -89,7 +88,8 @@ let postMessage = (req, res) => {
                   "1 message inserted for not in DB userId=" + SENDER_ID
                 );
                 client.close();
-              });
+              }
+            );
           }
           // user is in DB
           else {
@@ -104,12 +104,10 @@ let postMessage = (req, res) => {
             // or with spread operator
             // newText = [...usrArrMess];
 
-            client
-              .collection(process.env.DB_COLLECTION)
-              .update(
-                { _id: result[posInDB]._id },
-                { $set: { text: newText } }
-              );
+            db.collection(process.env.DB_COLLECTION).update(
+              { _id: result[posInDB]._id },
+              { $set: { text: newText } }
+            );
 
             console.log("1 message inserted for in DB userId=" + SENDER_ID);
             client.close();
@@ -118,95 +116,6 @@ let postMessage = (req, res) => {
     }
   );
 };
-
-// // function to add message to DB
-// function postMessage(req, res) {
-//   if (COUNT_MESSAGES % 2 == 0) return;
-
-//   let MongoClient = require("mongodb").MongoClient;
-
-//   // create the message object
-//   let obj = new Message({
-//     senderId: SENDER_ID,
-//     text: [WEBHOOK_MSG],
-//   });
-
-//   console.log(`OBJ` + obj);
-
-//   MongoClient.connect(
-//     process.env.DB_CONNECTION,
-//     {
-//       auth: {
-//         user: process.env.MONGO_DB_USER,
-//         password: process.env.MONGO_DB_PASSWORD,
-//       },
-//     },
-//     {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     },
-//     function (err, client) {
-//       if (err) {
-//         throw err;
-//       }
-
-//       console.log("Connected to the server for inserting message");
-
-//       // Get database name
-//       let db = client.db(process.env.DB_NAME);
-
-//       // search if user already in database
-//       db.collection(process.env.DB_COLLECTION)
-//         .find({})
-//         .toArray((err, res) => {
-//           if (err) {
-//             throw err;
-//           }
-//           console.log("Display data: " + res);
-
-//           // check whwther user is in DB
-//           let posInDB = checkInDB(res);
-
-//           // if user is not in DB
-//           if (posInDB < 0) {
-//             db.collection(process.env.DB_COLLECTION).insertOne(
-//               obj,
-//               (error, res) => {
-//                 if (error) {
-//                   throw error;
-//                 }
-
-//                 console.log(
-//                   "1 message inserted for not in DB userId=" + SENDER_ID
-//                 );
-//                 client.close();
-//               }
-//             );
-//           }
-//           // user in DB
-//           else {
-//             let userArrMsg = res[posInDB]._id;
-//             console.log("User Messages: " + userArrMsg);
-
-//             let newText = [];
-//             newText = [...userArrMsg];
-
-//             db.collection(process.env.DB_COLLECTION).update(
-//               {
-//                 _id: res[posInDB]._id,
-//               },
-//               {
-//                 $set: { text: newText },
-//               }
-//             );
-
-//             console.log("1 message inserted for in DB userId=" + SENDER_ID);
-//             client.close();
-//           }
-//         });
-//     }
-//   );
-// }
 
 // Create endpoint webhook
 router.post("/webhook", (req, res) => {
