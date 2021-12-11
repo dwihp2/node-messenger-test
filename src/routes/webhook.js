@@ -60,10 +60,11 @@ let postMessage = (req, res) => {
       console.log("Connected to the server for inserting message");
 
       // Get database name
-      let db = client.db(process.env.DB_NAME);
+      // let db = client.db(process.env.DB_NAME);
 
       // we search if user already in database
-      db.collection(process.env.DB_COLLECTION)
+      client
+        .collection(process.env.DB_COLLECTION)
         .find({})
         .toArray(function (err, result) {
           if (err) {
@@ -77,9 +78,9 @@ let postMessage = (req, res) => {
 
           // if user is not in DB
           if (posInDB < 0) {
-            db.collection(process.env.DB_COLLECTION).insertOne(
-              obj,
-              function (error, res) {
+            client
+              .collection(process.env.DB_COLLECTION)
+              .insertOne(obj, function (error, res) {
                 if (error) {
                   throw error;
                 }
@@ -88,8 +89,7 @@ let postMessage = (req, res) => {
                   "1 message inserted for not in DB userId=" + SENDER_ID
                 );
                 client.close();
-              }
-            );
+              });
           }
           // user is in DB
           else {
@@ -104,10 +104,12 @@ let postMessage = (req, res) => {
             // or with spread operator
             // newText = [...usrArrMess];
 
-            db.collection(process.env.DB_COLLECTION).update(
-              { _id: result[posInDB]._id },
-              { $set: { text: newText } }
-            );
+            client
+              .collection(process.env.DB_COLLECTION)
+              .update(
+                { _id: result[posInDB]._id },
+                { $set: { text: newText } }
+              );
 
             console.log("1 message inserted for in DB userId=" + SENDER_ID);
             client.close();
