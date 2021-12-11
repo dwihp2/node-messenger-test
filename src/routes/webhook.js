@@ -52,7 +52,7 @@ function postMessage(req, res) {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     },
-    (err, client) => {
+    function (err, client) {
       if (err) {
         throw err;
       }
